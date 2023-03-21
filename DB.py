@@ -17,10 +17,20 @@ phrase TEXT
 )""")
 
 def checkForPhrase(id):
-    return cursor.execute(f"""SELECT * FROM phrases WHERE id = '{id}'""").fetchone()
+    return cursor.execute(f"""SELECT phrase FROM phrases WHERE id = '{id}'""").fetchone()
 
 def addPhrase(id, phrase):
     cursor.execute(f"""INSERT INTO phrases(id, phrase) VALUES
                    ('{id}', '{phrase}')""")
     connect.commit()
     return "Успех"
+
+
+# TODO проверка на существование записи
+def addPasswordList(id, password_list):
+    for line in password_list:
+        cursor.execute(f"""INSERT INTO manager (
+            id, login, password, source) VALUES(
+            '{id}', '{line[1]}', '{line[2]}', '{line[0]}'
+            )""")
+    connect.commit()
