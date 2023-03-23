@@ -25,6 +25,22 @@ def welcome(message):
         menu(message)
 
 
+# TODO main menu
+@bot.message_handler(commands=['menu'])
+def menu(message):
+    logging.info("Triggered menu()")
+    start_deleting = DB.readMessageID(message.from_user.id)
+    if start_deleting:
+        finish_deleting = bot.send_message(message.chat.id, "Что вас интересует?").id
+        logging.info(f"Started deleting process ({int(start_deleting)}/{finish_deleting})")
+        for message_to_delete in range(int(start_deleting), finish_deleting):
+            bot.delete_message(message.chat.id, message_to_delete)
+            logging.info(f"Deleted message #{message_to_delete}")
+        DB.deleteMessageID(message.from_user.id)
+    else:
+        bot.send_message(message.chat.id, "Что вас интересует?")
+
+
 
 @bot.message_handler(content_types=['text'])
 def text(message):
@@ -49,22 +65,6 @@ def text(message):
 
 
 
-# TODO main menu
-@bot.message_handler(commands=['menu'])
-def menu(message):
-    logging.info("Triggered menu()")
-    finish_deleting = bot.send_message(message.chat.id, "Что вас интересует?").id
-    start_deleting = int(DB.readMessageID(message.from_user.id))
-    logging.info(f"Started deleting process ({start_deleting}/{finish_deleting})")
-    for message_to_delete in range(start_deleting, finish_deleting):
-        bot.delete_message(message.chat.id, message_to_delete)
-        logging.info(f"Deleted message #{message_to_delete}")
-    DB.deleteMessageID(message.from_user.id)
-
-
-
-
-# TODO manager menu
 def managerMenu(message):
     logging.info("Triggered managerMenu()")
     DB.addMessageID(message.from_user.id, message.id)

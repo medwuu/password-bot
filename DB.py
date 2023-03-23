@@ -14,7 +14,7 @@ password TEXT
 cursor.execute("""CREATE TABLE IF NOT EXISTS phrases(
 id INTEGER UNIQUE,
 phrase TEXT,
-message_id INTEGER DEFAULT 'None'
+message_id INTEGER DEFAULT ''
 )""")
 
 def checkForPhrase(id):
@@ -47,7 +47,7 @@ def readMessageID(id):
     return cursor.execute(f"""SELECT message_id FROM phrases WHERE id = '{id}'""").fetchone()[0]
 
 def deleteMessageID(id):
-    cursor.execute(f"""UPDATE phrases SET message_id = '{None}' WHERE id = '{id}'""")
+    cursor.execute(f"""UPDATE phrases SET message_id = '' WHERE id = '{id}'""")
     connect.commit()
 
 def changeDBPhrase(id, new_phrase):
