@@ -53,10 +53,12 @@ def text(message):
 @bot.message_handler(commands=['menu'])
 def menu(message):
     logging.info("Triggered menu()")
-    bot_msg = bot.send_message(message.chat.id, "Что вас интересует?")
+    finish_deleting = bot.send_message(message.chat.id, "Что вас интересует?").id
     start_deleting = int(DB.readMessageID(message.from_user.id))
-    for message_to_delete in range(start_deleting, bot_msg.id):
+    logging.info(f"Started deleting process ({start_deleting}/{finish_deleting})")
+    for message_to_delete in range(start_deleting, finish_deleting):
         bot.delete_message(message.chat.id, message_to_delete)
+        logging.info(f"Deleted message #{message_to_delete}")
     DB.deleteMessageID(message.from_user.id)
 
 
