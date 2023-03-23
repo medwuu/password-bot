@@ -36,6 +36,8 @@ def addPasswordList(id, password_list):
             )""")
     connect.commit()
 
+def getPasswords(id):
+    return cursor.execute(f"""SELECT source, login, password FROM manager WHERE id = '{id}'""").fetchall()
 
 def addMessageID(id, message_id):
     cursor.execute(f"""UPDATE phrases SET message_id = '{message_id}' WHERE id = '{id}'""")
@@ -47,3 +49,13 @@ def readMessageID(id):
 def deleteMessageID(id):
     cursor.execute(f"""UPDATE phrases SET message_id = '{None}' WHERE id = '{id}'""")
     connect.commit()
+
+def changeDBPhrase(id, new_phrase):
+    cursor.execute(f"""UPDATE phrases SET phrase = '{new_phrase}' WHERE id = '{id}'""")
+    connect.commit()
+    return "Успех!"
+
+def deleteDBPasswords(id):
+    cursor.execute(f"""DELETE FROM manager WHERE id = '{id}'""")
+    connect.commit()
+    return "Все пароли успешно удалены!"

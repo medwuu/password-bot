@@ -34,6 +34,15 @@ def text(message):
     elif message.text == "Импорт паролей из JSON":
         bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON файл")
         bot.register_next_step_handler(bot_msg, getJson)
+    elif message.text == "Посмотреть пароли":
+        showPasswords(message)
+    elif message.text == "Удалить все пароли":
+        deletePasswords(message)
+    elif message.text == "Изменить фразу":
+        bot_msg = bot.send_message(message.chat.id, "Пришлите вашу новую фразу")
+        bot.register_next_step_handler(bot_msg, changePhrase)
+    elif message.text == "Выход":
+        menu(message)
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
@@ -44,8 +53,9 @@ def text(message):
 @bot.message_handler(commands=['menu'])
 def menu(message):
     logging.info("Triggered menu()")
+    bot_msg = bot.send_message(message.chat.id, "Что вас интересует?")
     start_deleting = int(DB.readMessageID(message.from_user.id))
-    for message_to_delete in range(start_deleting, message.id + 2):
+    for message_to_delete in range(start_deleting, bot_msg.id):
         bot.delete_message(message.chat.id, message_to_delete)
     DB.deleteMessageID(message.from_user.id)
 
@@ -58,9 +68,12 @@ def managerMenu(message):
     DB.addMessageID(message.from_user.id, message.id)
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     import_json = types.KeyboardButton("Импорт паролей из JSON")
-
-    markup.add(import_json)
-    bot.send_message(message.chat.id, "Что вас интересует?", reply_markup=markup)
+    show_passwords = types.KeyboardButton("Посмотреть пароли")
+    delete_all = types.KeyboardButton("Удалить все пароли")
+    change_phrase = types.KeyboardButton("Изменить фразу")
+    exit = types.KeyboardButton("Выход")
+    markup.add(import_json, show_passwords, delete_all, change_phrase, exit)
+    bot.send_message(message.chat.id, "Меню менеджера паролей. Что вас интересует?", reply_markup=markup)
     
 
 
@@ -106,6 +119,30 @@ def jsonProcess(message, file_src):
     logging.info("File succesfully deleted")
     menu(message)
 
+def showPasswords(message):
+    logging.info("Triggered showPasswords()")
+    passwords_list = DB.getPasswords(message.from_user.id)
+    if not passwords_list:
+        bot.send_message(message.chat.id, "У вас пока нет добавленных паролей")
+        menu(message)
+    else:
+        for password_num, password_line in enumerate(passwords_list, start=1):
+            bot.send_message(message.chat.id, f"{password_num}. Источник: <code>{password_line[0]}</code>\n" +
+                             f"логин: <code>{password_line[1]}</code>\n" +
+                             f"пароль: <code>{password_line[2]}</code>",
+                             parse_mode="html")
+
+def changePhrase(message):
+    new_phrase = message.text
+    answer = DB.changeDBPhrase(message.from_user.id, new_phrase)
+    bot.send_message(message.chat.id, answer)
+    time.sleep(5)
+    menu(message)
+
+def deletePasswords(message):
+    answer = DB.deleteDBPasswords(message.from_user.id)
+    bot.send_message(message.chat.id, answer)
+    menu(message)
     
     
     
@@ -120,3 +157,6 @@ def start():
         bot.polling()
     except Exception as error:
         logging.critical(f"Launch failed! Error:\n{error}", exc_info=True)
+
+
+start()
