@@ -6,14 +6,15 @@ cursor = connect.cursor()
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS manager(
 id INT,
+source TEXT,
 login TEXT,
-password TEXT,
-source TEXT
+password TEXT
 )""")
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS phrases(
 id INTEGER UNIQUE,
-phrase TEXT
+phrase TEXT,
+message_id INTEGER DEFAULT 'None'
 )""")
 
 def checkForPhrase(id):
@@ -30,7 +31,19 @@ def addPhrase(id, phrase):
 def addPasswordList(id, password_list):
     for line in password_list:
         cursor.execute(f"""INSERT INTO manager (
-            id, login, password, source) VALUES(
-            '{id}', '{line[1]}', '{line[2]}', '{line[0]}'
+            id, source, login, password) VALUES(
+            '{id}', '{line[0]}', '{line[1]}', '{line[2]}'
             )""")
+    connect.commit()
+
+
+def addMessageID(id, message_id):
+    cursor.execute(f"""UPDATE phrases SET message_id = '{message_id}' WHERE id = '{id}'""")
+    connect.commit()
+
+def readMessageID(id):
+    return cursor.execute(f"""SELECT message_id FROM phrases WHERE id = '{id}'""").fetchone()[0]
+
+def deleteMessageID(id):
+    cursor.execute(f"""UPDATE phrases SET message_id = '{None}' WHERE id = '{id}'""")
     connect.commit()

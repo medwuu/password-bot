@@ -33,7 +33,6 @@ def text(message):
         managerMenu(message)
     elif message.text == "Импорт паролей из JSON":
         bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON файл")
-        # TODO исправить (опасный переход)
         bot.register_next_step_handler(bot_msg, getJson)
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
@@ -41,24 +40,14 @@ def text(message):
 
 
 
-@bot.message_handler(content_types=['document'])
-def getJson(message):
-    logging.info("Triggered getJson()")
-    file_info = bot.get_file(message.document.file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    src = f"files/{message.document.file_name}"
-    with open(src, "wb") as file:
-        file.write(downloaded_file)
-    jsonProcess(message, src)
-    
-
-
-
-
 # TODO main menu
 @bot.message_handler(commands=['menu'])
 def menu(message):
     logging.info("Triggered menu()")
+    start_deleting = int(DB.readMessageID(message.from_user.id))
+    for message_to_delete in range(start_deleting, message.id + 2):
+        bot.delete_message(message.chat.id, message_to_delete)
+    DB.deleteMessageID(message.from_user.id)
 
 
 
@@ -66,6 +55,7 @@ def menu(message):
 # TODO manager menu
 def managerMenu(message):
     logging.info("Triggered managerMenu()")
+    DB.addMessageID(message.from_user.id, message.id)
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     import_json = types.KeyboardButton("Импорт паролей из JSON")
 
@@ -87,15 +77,33 @@ def addPhrase(message, id):
         bot.delete_message(id, message_id)
         logging.info(f"Deleted welcome() message #{message_id}")
 
+def getJson(message):
+    try:
+        extension = message.document.file_name.split(".")[-1]
+    except AttributeError:
+        extension = None
+    if extension == "json":
+        logging.info("Triggered getJson()")
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        src = f"files/{message.document.file_name}"
+        with open(src, "wb") as file:
+            file.write(downloaded_file)
+            logging.info(f"Created file {src.split('/')[1]}")
+        jsonProcess(message, src)
+    else:
+        bot.send_message(message.chat.id, "Я принимаю только файлы JSON")
+        menu(message)
+
 def jsonProcess(message, file_src):
     logging.info("Triggered jsonProcess()")
     with open(file_src, "r") as file:
-        passwords_list = json.load(file)
+        passwords_list = json.load(file)["passwords"]
     logging.info("Triggered DB.addPasswordList()")
-    DB.addPasswordList(message.from_user.id, passwords_list["passwords"])
+    DB.addPasswordList(message.from_user.id, passwords_list)
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
-    # TODO удаление
-    os.remove(f"files/{file_src}")
+    os.remove(file_src)
+    logging.info("File succesfully deleted")
     menu(message)
 
     
