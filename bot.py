@@ -6,6 +6,7 @@ import logging
 import time
 import json
 import os
+import csv
 
 import telebot
 
@@ -29,6 +30,7 @@ def welcome(message):
 @bot.message_handler(commands=['menu'])
 def menu(message):
     logging.info("Triggered menu()")
+    DB.editInManager(message.from_user.id)
     start_deleting = DB.readMessageID(message.from_user.id)
     if start_deleting:
         finish_deleting = bot.send_message(message.chat.id, "Что вас интересует?").id
@@ -60,18 +62,24 @@ def text(message):
     logging.info("Triggered text()")
     if message.text == DB.checkForPhrase(message.from_user.id)[0]:
         managerMenu(message)
-    elif message.text == "Импорт паролей из JSON":
-        bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON файл")
-        bot.register_next_step_handler(bot_msg, getJson)
-    elif message.text == "Посмотреть пароли":
-        showPasswords(message)
-    elif message.text == "Удалить все пароли":
-        deletePasswords(message)
-    elif message.text == "Изменить фразу":
-        bot_msg = bot.send_message(message.chat.id, "Пришлите вашу новую фразу")
-        bot.register_next_step_handler(bot_msg, changePhrase)
-    elif message.text == "Выход":
-        menu(message)
+    if DB.checkInManager(message.from_user.id):
+        if message.text == "Изменение паролей":
+            markup = types.ReplyKeyboardMarkup(True, row_width=3)
+            file_import = types.KeyboardButton("Импорт из файла")
+            just_add = types.KeyboardButton("Добавить один пароль")
+            just_delete = types.KeyboardButton("Удалить один пароль")
+            markup.add(file_import, just_add, just_delete)
+            bot_msg = bot.send_message(message.chat.id, "Выберите режим", markup=markup)
+            bot.register_next_step_handler(bot_msg, editPasswords)
+        elif message.text == "Посмотреть пароли":
+            showPasswords(message)
+        elif message.text == "Удалить все пароли":
+            deletePasswords(message)
+        elif message.text == "Изменить фразу":
+            bot_msg = bot.send_message(message.chat.id, "Пришлите вашу новую фразу")
+            bot.register_next_step_handler(bot_msg, changePhrase)
+        elif message.text == "Выход":
+            menu(message)
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
@@ -84,9 +92,10 @@ def text(message):
 
 def managerMenu(message):
     logging.info("Triggered managerMenu()")
+    DB.editInManager(message.from_user.id, 1)
     DB.addMessageID(message.from_user.id, message.id)
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
-    import_json = types.KeyboardButton("Импорт паролей из JSON")
+    import_json = types.KeyboardButton("Изменение паролей")
     show_passwords = types.KeyboardButton("Посмотреть пароли")
     delete_all = types.KeyboardButton("Удалить все пароли")
     change_phrase = types.KeyboardButton("Изменить фразу")
@@ -109,20 +118,38 @@ def addPhrase(message, id):
         bot.delete_message(id, message_id)
         logging.info(f"Deleted welcome() message #{message_id}")
 
-def getJson(message):
+def editPasswords(message):
+    logging.info("Triggered editPasswords()")
+    if message.text == "Импорт из файла":
+        bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON или CSV файл")
+        bot.register_next_step_handler(bot_msg, documentHandler)
+    # TODO
+    elif message.text == "Добавить один пароль":
+        bot.send_message(message.chat.id, "В разработке...")
+        menu(message)
+    # TODO
+    elif message.text == "Удалить один пароль":
+        bot.send_message(message.chat.id, "В разработке...")
+        menu(message)
+    else:
+        bot.send_message(message.chat.id, "Извините, не понял вас :с")
+        menu(message)
+
+
+def documentHandler(message):
+    logging.info("Triggered getJson()")
     try:
         extension = message.document.file_name.split(".")[-1]
     except AttributeError:
         extension = None
-    if extension == "json":
-        logging.info("Triggered getJson()")
+    if extension in ["json", "csv"]:
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
         src = f"files/{message.document.file_name}"
         with open(src, "wb") as file:
             file.write(downloaded_file)
             logging.info(f"Created file {src.split('/')[1]}")
-        jsonProcess(message, src)
+        jsonProcess(message, src) if extension == "json" else csvProcess(message, src)
     else:
         bot.send_message(message.chat.id, "Я принимаю только файлы JSON")
         menu(message)
@@ -131,8 +158,20 @@ def jsonProcess(message, file_src):
     logging.info("Triggered jsonProcess()")
     with open(file_src, "r") as file:
         passwords_list = json.load(file)["passwords"]
-    logging.info("Triggered DB.addPasswordList()")
-    DB.addPasswordList(message.from_user.id, passwords_list)
+    logging.info("Triggered DB.addPassword()")
+    for pass_element in passwords_list:
+        DB.addPassword(message.from_user.id, pass_element)
+    bot.send_message(message.chat.id, "Пароли успешно добавлены!")
+    os.remove(file_src)
+    logging.info("File succesfully deleted")
+    menu(message)
+
+def csvProcess(message, file_src):
+    logging.info("Triggered csvProcess()")
+    with open(file_src) as csv_file:
+        reader = csv.reader(csv_file)
+        for pass_element in reader:
+            DB.addPassword(message.from_user.id, pass_element[:3])
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
     logging.info("File succesfully deleted")
@@ -159,7 +198,7 @@ def changePhrase(message):
     menu(message)
 
 def deletePasswords(message):
-    answer = DB.deleteDBPasswords(message.from_user.id)
+    answer = DB.deleteAllPasswords(message.from_user.id)
     bot.send_message(message.chat.id, answer)
     menu(message)
     

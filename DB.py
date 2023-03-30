@@ -11,51 +11,57 @@ login TEXT,
 password TEXT
 )""")
 
-cursor.execute("""CREATE TABLE IF NOT EXISTS phrases(
+cursor.execute("""CREATE TABLE IF NOT EXISTS users(
 id INTEGER UNIQUE,
 phrase TEXT,
-message_id INTEGER DEFAULT ''
+message_id INTEGER DEFAULT '',
+in_manager INTEGER DEFAULT 0
 )""")
 
 def checkForPhrase(id):
-    return cursor.execute(f"""SELECT phrase FROM phrases WHERE id = '{id}'""").fetchone()
+    return cursor.execute(f"""SELECT phrase FROM users WHERE id = '{id}'""").fetchone()
 
 def addPhrase(id, phrase):
-    cursor.execute(f"""INSERT INTO phrases(id, phrase) VALUES
+    cursor.execute(f"""INSERT INTO users(id, phrase) VALUES
                    ('{id}', '{phrase}')""")
     connect.commit()
     return "Успех"
 
+def checkInManager(id):
+    return cursor.execute(f"""SELECT in_manager FROM users WHERE id = '{id}'""").fetchone()[0]
+
+def editInManager(id, value=0):
+    cursor.execute(f"""UPDATE users SET in_manager = '{value}' WHERE id = '{id}'""")
+    connect.commit()
 
 # TODO проверка на существование записи
-def addPasswordList(id, password_list):
-    for line in password_list:
-        cursor.execute(f"""INSERT INTO manager (
-            id, source, login, password) VALUES(
-            '{id}', '{line[0]}', '{line[1]}', '{line[2]}'
-            )""")
+def addPassword(id, pass_element):
+    cursor.execute(f"""INSERT INTO manager (
+        id, source, login, password) VALUES(
+        '{id}', '{pass_element[0]}', '{pass_element[1]}', '{pass_element[2]}'
+        )""")
     connect.commit()
 
 def getPasswords(id):
     return cursor.execute(f"""SELECT source, login, password FROM manager WHERE id = '{id}'""").fetchall()
 
 def addMessageID(id, message_id):
-    cursor.execute(f"""UPDATE phrases SET message_id = '{message_id}' WHERE id = '{id}'""")
+    cursor.execute(f"""UPDATE users SET message_id = '{message_id}' WHERE id = '{id}'""")
     connect.commit()
 
 def readMessageID(id):
-    return cursor.execute(f"""SELECT message_id FROM phrases WHERE id = '{id}'""").fetchone()[0]
+    return cursor.execute(f"""SELECT message_id FROM users WHERE id = '{id}'""").fetchone()[0]
 
 def deleteMessageID(id):
-    cursor.execute(f"""UPDATE phrases SET message_id = '' WHERE id = '{id}'""")
+    cursor.execute(f"""UPDATE users SET message_id = '' WHERE id = '{id}'""")
     connect.commit()
 
 def changeDBPhrase(id, new_phrase):
-    cursor.execute(f"""UPDATE phrases SET phrase = '{new_phrase}' WHERE id = '{id}'""")
+    cursor.execute(f"""UPDATE users SET phrase = '{new_phrase}' WHERE id = '{id}'""")
     connect.commit()
     return "Успех!"
 
-def deleteDBPasswords(id):
+def deleteAllPasswords(id):
     cursor.execute(f"""DELETE FROM manager WHERE id = '{id}'""")
     connect.commit()
     return "Все пароли успешно удалены!"
