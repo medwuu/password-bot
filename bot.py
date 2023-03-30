@@ -44,6 +44,7 @@ def menu(message):
 
 
 
+
 @bot.message_handler(content_types=['text'])
 def text(message):
     logging.info("Triggered text()")
