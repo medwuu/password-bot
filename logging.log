@@ -1,0 +1,28 @@
+2023-03-31 02:03:03,023 INFO Succesfull import
+2023-03-31 02:03:03,024 INFO Succesfull launch
+2023-03-31 02:03:03,410 INFO Triggered menu()
+2023-03-31 02:03:03,417 CRITICAL Launch failed! Error:
+'NoneType' object is not subscriptable
+Traceback (most recent call last):
+  File "c:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\bot.py", line 176, in start
+    bot.polling()
+  File "C:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\venv\Lib\site-packages\telebot\__init__.py", line 1043, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "C:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\venv\Lib\site-packages\telebot\__init__.py", line 1118, in __threaded_polling
+    raise e
+  File "C:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\venv\Lib\site-packages\telebot\__init__.py", line 1074, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+  File "C:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\venv\Lib\site-packages\telebot\util.py", line 148, in raise_exceptions
+    raise self.exception_info
+  File "C:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\venv\Lib\site-packages\telebot\util.py", line 91, in run
+    task(*args, **kwargs)
+  File "C:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\venv\Lib\site-packages\telebot\__init__.py", line 6428, in _run_middlewares_and_handler
+    result = handler['function'](message)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\bot.py", line 32, in menu
+    start_deleting = DB.readMessageID(message.from_user.id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\niks1\OneDrive\Рабочий стол\Password_bot VS\password-bot\DB.py", line 47, in readMessageID
+    return cursor.execute(f"""SELECT message_id FROM phrases WHERE id = '{id}'""").fetchone()[0]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+TypeError: 'NoneType' object is not subscriptable

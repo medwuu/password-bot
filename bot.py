@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import config
 import DB
-
+import random
 import logging
 import time
 import json
@@ -40,7 +40,19 @@ def menu(message):
     else:
         bot.send_message(message.chat.id, "Что вас интересует?")
 
+#@bot.message_handler(commands=['coinflip'])
+#def coinflip(message):
+#    markup_reply = types.ReplyKeyboardMarkup(resize_keyboard= True)
+#    Flip = types.KeyboardButton('Подбросить монетку')
+#    num = types.KeyboardButton('Угадай число')
+#    pars = types.KeyboardButton('Курс валют')
+#    shifr = types.KeyboardButton('Шифр Цезаря')
+#
+#    markup_reply.add(Flip)
+#    bot.send_message(message.message.chat.id, 'Выберите действие', reply_markup = markup_reply)
 
+
+    
 
 
 @bot.message_handler(content_types=['text'])
@@ -63,6 +75,10 @@ def text(message):
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
+    #if message.text == 'Подбросить монетку':
+    #    coin_start(message)
+    #if message.text == 'Угадай число':
+    #    random_num(message)
 
 
 
@@ -161,5 +177,24 @@ def start():
     except Exception as error:
         logging.critical(f"Launch failed! Error:\n{error}", exc_info=True)
 
+
+#def coin_start():
+#    num = random.randint(0,1)
+
+#    if num > 0.5:
+#        print('Орёл')
+#    else:
+#        print('Решка')
+
+#def random_num():
+
+#    num = random.randint(0,20)
+#    print('Угадай число от 0 до 20')
+#    n = int(input())
+#    if n == num:
+#        print('Ты угадал')
+#   else:
+#        print('Увы :(')
+    
 
 start()
