@@ -35,7 +35,7 @@ def editInManager(id, value=0):
     connect.commit()
 
 # TODO проверка на существование записи
-def addPasswordList(id, pass_element):
+def addPassword(id, pass_element):
     cursor.execute(f"""INSERT INTO manager (
         id, source, login, password) VALUES(
         '{id}', '{pass_element[0]}', '{pass_element[1]}', '{pass_element[2]}'
@@ -61,7 +61,7 @@ def changeDBPhrase(id, new_phrase):
     connect.commit()
     return "Успех!"
 
-def deleteDBPasswords(id):
+def deleteAllPasswords(id):
     cursor.execute(f"""DELETE FROM manager WHERE id = '{id}'""")
     connect.commit()
     return "Все пароли успешно удалены!"

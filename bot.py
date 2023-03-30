@@ -51,9 +51,14 @@ def text(message):
     if message.text == DB.checkForPhrase(message.from_user.id)[0]:
         managerMenu(message)
     if DB.checkInManager(message.from_user.id):
-        if message.text == "Импорт паролей из JSON":
-            bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON или CSV файл")
-            bot.register_next_step_handler(bot_msg, documentHandler)
+        if message.text == "Изменение паролей":
+            markup = types.ReplyKeyboardMarkup(True, row_width=3)
+            file_import = types.KeyboardButton("Импорт из файла")
+            just_add = types.KeyboardButton("Добавить один пароль")
+            just_delete = types.KeyboardButton("Удалить один пароль")
+            markup.add(file_import, just_add, just_delete)
+            bot_msg = bot.send_message(message.chat.id, "Выберите режим", markup=markup)
+            bot.register_next_step_handler(bot_msg, editPasswords)
         elif message.text == "Посмотреть пароли":
             showPasswords(message)
         elif message.text == "Удалить все пароли":
@@ -74,7 +79,7 @@ def managerMenu(message):
     DB.editInManager(message.from_user.id, 1)
     DB.addMessageID(message.from_user.id, message.id)
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
-    import_json = types.KeyboardButton("Импорт паролей из JSON")
+    import_json = types.KeyboardButton("Изменение паролей")
     show_passwords = types.KeyboardButton("Посмотреть пароли")
     delete_all = types.KeyboardButton("Удалить все пароли")
     change_phrase = types.KeyboardButton("Изменить фразу")
@@ -96,6 +101,24 @@ def addPhrase(message, id):
     for message_id in range(message.id - 1, bot_msg.id + 1):
         bot.delete_message(id, message_id)
         logging.info(f"Deleted welcome() message #{message_id}")
+
+def editPasswords(message):
+    logging.info("Triggered editPasswords()")
+    if message.text == "Импорт из файла":
+        bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON или CSV файл")
+        bot.register_next_step_handler(bot_msg, documentHandler)
+    # TODO
+    elif message.text == "Добавить один пароль":
+        bot.send_message(message.chat.id, "В разработке...")
+        menu(message)
+    # TODO
+    elif message.text == "Удалить один пароль":
+        bot.send_message(message.chat.id, "В разработке...")
+        menu(message)
+    else:
+        bot.send_message(message.chat.id, "Извините, не понял вас :с")
+        menu(message)
+
 
 def documentHandler(message):
     logging.info("Triggered getJson()")
@@ -119,9 +142,9 @@ def jsonProcess(message, file_src):
     logging.info("Triggered jsonProcess()")
     with open(file_src, "r") as file:
         passwords_list = json.load(file)["passwords"]
-    logging.info("Triggered DB.addPasswordList()")
+    logging.info("Triggered DB.addPassword()")
     for pass_element in passwords_list:
-        DB.addPasswordList(message.from_user.id, pass_element)
+        DB.addPassword(message.from_user.id, pass_element)
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
     logging.info("File succesfully deleted")
@@ -132,7 +155,7 @@ def csvProcess(message, file_src):
     with open(file_src) as csv_file:
         reader = csv.reader(csv_file)
         for pass_element in reader:
-            DB.addPasswordList(message.from_user.id, pass_element[:3])
+            DB.addPassword(message.from_user.id, pass_element[:3])
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
     logging.info("File succesfully deleted")
@@ -159,7 +182,7 @@ def changePhrase(message):
     menu(message)
 
 def deletePasswords(message):
-    answer = DB.deleteDBPasswords(message.from_user.id)
+    answer = DB.deleteAllPasswords(message.from_user.id)
     bot.send_message(message.chat.id, answer)
     menu(message)
     
