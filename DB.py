@@ -14,7 +14,8 @@ password TEXT
 cursor.execute("""CREATE TABLE IF NOT EXISTS phrases(
 id INTEGER UNIQUE,
 phrase TEXT,
-message_id INTEGER DEFAULT ''
+message_id INTEGER DEFAULT '',
+in_manager INTEGER DEFAULT 0
 )""")
 
 def checkForPhrase(id):
@@ -26,14 +27,19 @@ def addPhrase(id, phrase):
     connect.commit()
     return "Успех"
 
+def checkInManager(id):
+    return cursor.execute(f"""SELECT in_manager FROM phrases WHERE id = '{id}'""").fetchone()[0]
+
+def editInManager(id, value=0):
+    cursor.execute(f"""UPDATE phrases SET in_manager = '{value}' WHERE id = '{id}'""")
+    connect.commit()
 
 # TODO проверка на существование записи
-def addPasswordList(id, password_list):
-    for line in password_list:
-        cursor.execute(f"""INSERT INTO manager (
-            id, source, login, password) VALUES(
-            '{id}', '{line[0]}', '{line[1]}', '{line[2]}'
-            )""")
+def addPasswordList(id, pass_element):
+    cursor.execute(f"""INSERT INTO manager (
+        id, source, login, password) VALUES(
+        '{id}', '{pass_element[0]}', '{pass_element[1]}', '{pass_element[2]}'
+        )""")
     connect.commit()
 
 def getPasswords(id):
