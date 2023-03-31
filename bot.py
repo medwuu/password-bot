@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import config
 import DB
-import random
-import logging
-import time
-import json
-import os
+
 import csv
+import json
+import logging
+import os
+import random
+import time
 
 import telebot
 
@@ -41,17 +42,15 @@ def menu(message):
         DB.deleteMessageID(message.from_user.id)
     else:
         bot.send_message(message.chat.id, "Что вас интересует?")
+        # markup_reply = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        # Flip = types.KeyboardButton('Подбросить монетку')
+        # num = types.KeyboardButton('Угадай число')
+        # pars = types.KeyboardButton('Курс валют')
+        # shifr = types.KeyboardButton('Шифр Цезаря')
+        # markup_reply.add(Flip)
+        # bot.send_message(message.chat.id, 'Выберите действие', reply_markup=markup_reply)
 
-#@bot.message_handler(commands=['coinflip'])
-#def coinflip(message):
-#    markup_reply = types.ReplyKeyboardMarkup(resize_keyboard= True)
-#    Flip = types.KeyboardButton('Подбросить монетку')
-#    num = types.KeyboardButton('Угадай число')
-#    pars = types.KeyboardButton('Курс валют')
-#    shifr = types.KeyboardButton('Шифр Цезаря')
-#
-#    markup_reply.add(Flip)
-#    bot.send_message(message.message.chat.id, 'Выберите действие', reply_markup = markup_reply)
+
 
 
     
@@ -201,21 +200,6 @@ def deletePasswords(message):
     answer = DB.deleteAllPasswords(message.from_user.id)
     bot.send_message(message.chat.id, answer)
     menu(message)
-    
-    
-    
-
-
-def start():
-    logging.basicConfig(level=logging.INFO, filename="logging.log", filemode="w",
-                        format="%(asctime)s %(levelname)s %(message)s")
-    logging.info("Succesfull import")
-    try:
-        logging.info("Succesfull launch")
-        bot.polling()
-    except Exception as error:
-        logging.critical(f"Launch failed! Error:\n{error}", exc_info=True)
-
 
 #def coin_start():
 #    num = random.randint(0,1)
@@ -234,6 +218,19 @@ def start():
 #        print('Ты угадал')
 #   else:
 #        print('Увы :(')
+    
+    
+
+def start():
+    logging.basicConfig(level=logging.INFO, filename="logging.log", filemode="w",
+                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.info("Succesfull import")
+    try:
+        logging.info("Succesfull launch")
+        bot.polling()
+    except Exception as error:
+        logging.critical(f"Launch failed! Error:\n{error}", exc_info=True)
+
     
 
 start()
