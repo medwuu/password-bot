@@ -68,7 +68,7 @@ def text(message):
             just_add = types.KeyboardButton("Добавить один пароль")
             just_delete = types.KeyboardButton("Удалить один пароль")
             markup.add(file_import, just_add, just_delete)
-            bot_msg = bot.send_message(message.chat.id, "Выберите режим", markup=markup)
+            bot_msg = bot.send_message(message.chat.id, "Выберите режим", reply_markup=markup)
             bot.register_next_step_handler(bot_msg, editPasswords)
         elif message.text == "Посмотреть пароли":
             showPasswords(message)
@@ -124,8 +124,8 @@ def editPasswords(message):
         bot.register_next_step_handler(bot_msg, documentHandler)
     # TODO
     elif message.text == "Добавить один пароль":
-        bot.send_message(message.chat.id, "В разработке...")
-        menu(message)
+        bot_msg = bot.send_message(message.chat.id, "Пароль от какого сайта/приложения вы хотите добавить?")
+        bot.register_next_step_handler(bot_msg, askForSource)
     # TODO
     elif message.text == "Удалить один пароль":
         bot.send_message(message.chat.id, "В разработке...")
@@ -174,6 +174,26 @@ def csvProcess(message, file_src):
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
     logging.info("File succesfully deleted")
+    menu(message)
+
+def askForSource(message):
+    logging.info("Triggered askForSource()")
+    source = message.text
+    bot_msg = bot.send_message(message.chat.id, f"Отлично! Теперь введите логин от {source}")
+    bot.register_next_step_handler(bot_msg, askForLogin, source)
+
+def askForLogin(message, source):
+    logging.info("Triggered askForLogin()")
+    username = message.text
+    bot_msg = bot.send_message(message.chat.id, f"И последнее. Введите пароль от {source}")
+    bot.register_next_step_handler(bot_msg, askForPassword, source, username)
+
+def askForPassword(message, source, username):
+    logging.info("Triggered askForPassword()")
+    password = message.text
+    logging.info("Triggered addPassword()")
+    DB.addPassword(message.from_user.id, [source, username, password])
+    bot.send_message(message.chat.id, "Пароль успешно добавлен!")
     menu(message)
 
 def showPasswords(message):
