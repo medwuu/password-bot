@@ -61,6 +61,14 @@ def changeDBPhrase(id, new_phrase):
     connect.commit()
     return "Успех!"
 
+def deleteSinglePassword(id, line_to_delete):
+    cursor.execute(f"""DELETE FROM manager WHERE id = '{id}' AND
+    source = '{line_to_delete[0]}' AND
+    login = '{line_to_delete[1]}' AND
+    password = '{line_to_delete[2]}'""")
+    connect.commit()
+    return "Успех!"
+
 def deleteAllPasswords(id):
     cursor.execute(f"""DELETE FROM manager WHERE id = '{id}'""")
     connect.commit()

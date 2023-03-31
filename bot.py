@@ -35,6 +35,7 @@ def menu(message):
     start_deleting = DB.readMessageID(message.from_user.id)
     if start_deleting:
         finish_deleting = bot.send_message(message.chat.id, "Что вас интересует?").id
+        time.sleep(3)
         logging.info(f"Started deleting process ({int(start_deleting)}/{finish_deleting})")
         for message_to_delete in range(int(start_deleting), finish_deleting):
             bot.delete_message(message.chat.id, message_to_delete)
@@ -122,21 +123,20 @@ def editPasswords(message):
     if message.text == "Импорт из файла":
         bot_msg = bot.send_message(message.chat.id, "Пришлите, пожалуйста, ваш JSON или CSV файл")
         bot.register_next_step_handler(bot_msg, documentHandler)
-    # TODO
     elif message.text == "Добавить один пароль":
         bot_msg = bot.send_message(message.chat.id, "Пароль от какого сайта/приложения вы хотите добавить?")
         bot.register_next_step_handler(bot_msg, askForSource)
-    # TODO
     elif message.text == "Удалить один пароль":
-        bot.send_message(message.chat.id, "В разработке...")
-        menu(message)
+        showPasswords(message)
+        bot_msg = bot.send_message(message.chat.id, "Введите номер пароля, который необходимо удалить")
+        bot.register_next_step_handler(bot_msg, deleteOnePassword)
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
 
 
 def documentHandler(message):
-    logging.info("Triggered getJson()")
+    logging.info("Triggered documentHandler()")
     try:
         extension = message.document.file_name.split(".")[-1]
     except AttributeError:
@@ -184,17 +184,30 @@ def askForSource(message):
 
 def askForLogin(message, source):
     logging.info("Triggered askForLogin()")
-    username = message.text
+    login = message.text
     bot_msg = bot.send_message(message.chat.id, f"И последнее. Введите пароль от {source}")
-    bot.register_next_step_handler(bot_msg, askForPassword, source, username)
+    bot.register_next_step_handler(bot_msg, askForPassword, source, login)
 
-def askForPassword(message, source, username):
+def askForPassword(message, source, login):
     logging.info("Triggered askForPassword()")
     password = message.text
-    logging.info("Triggered addPassword()")
-    DB.addPassword(message.from_user.id, [source, username, password])
+    logging.info("Triggered DB.addPassword()")
+    DB.addPassword(message.from_user.id, [source, login, password])
     bot.send_message(message.chat.id, "Пароль успешно добавлен!")
     menu(message)
+
+def deleteOnePassword(message):
+    logging.info("Triggered deleteOnePassword()")
+    required_number = int(message.text)
+    passwords_list = DB.getPasswords(message.from_user.id)
+    if 0 < required_number < len(passwords_list) + 1:
+        line_to_delete = passwords_list[required_number - 1]
+        logging.info("Triggered DB.deleteSinglePassword()")
+        bot.send_message(message.chat.id, DB.deleteSinglePassword(message.from_user.id, line_to_delete))
+        menu(message)
+    else:
+        bot.send_message(message.chat.id, "Неправильное число")
+        menu(message)
 
 def showPasswords(message):
     logging.info("Triggered showPasswords()")
