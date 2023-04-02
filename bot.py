@@ -169,8 +169,9 @@ def csvProcess(message, file_src):
     logging.info("Triggered csvProcess()")
     with open(file_src) as csv_file:
         reader = csv.reader(csv_file)
-        for pass_element in reader:
-            DB.addPassword(message.from_user.id, pass_element[:3])
+        for index, pass_element in enumerate(reader):
+            if index != 0:
+                DB.addPassword(message.from_user.id, pass_element[:3])
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
     logging.info("File succesfully deleted")
