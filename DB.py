@@ -34,13 +34,13 @@ def editInManager(id, value=0):
     cursor.execute(f"""UPDATE users SET in_manager = '{value}' WHERE id = '{id}'""")
     connect.commit()
 
-# TODO проверка на существование записи
 def addPassword(id, pass_element):
-    cursor.execute(f"""INSERT INTO manager (
-        id, source, login, password) VALUES(
-        '{id}', '{pass_element[0]}', '{pass_element[1]}', '{pass_element[2]}'
-        )""")
-    connect.commit()
+    if not tuple(x for x in pass_element) in getPasswords(id):
+        cursor.execute(f"""INSERT INTO manager (
+            id, source, login, password) VALUES(
+            '{id}', '{pass_element[0]}', '{pass_element[1]}', '{pass_element[2]}'
+            )""")
+        connect.commit()
 
 def getPasswords(id):
     return cursor.execute(f"""SELECT source, login, password FROM manager WHERE id = '{id}'""").fetchall()

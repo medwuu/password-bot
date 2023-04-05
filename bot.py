@@ -6,14 +6,12 @@ import csv
 import json
 import logging
 import os
-import random
+# import random
 import time
 
-import telebot
+from telebot import TeleBot, types
 
-from telebot import types
-
-bot = telebot.TeleBot(config.TOKEN)
+bot = TeleBot(config.TOKEN)
 
 
 @bot.message_handler(commands=['start'])
