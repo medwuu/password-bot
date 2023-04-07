@@ -19,7 +19,7 @@ def welcome(message):
     id = message.from_user.id
     if not DB.checkForPhrase(id):
         logging.info("Triggered welcome()")
-        bot_msg = bot.send_message(message.chat.id, "Придумайте контрольное слово/фразу. Старайтесь не придумывать лёгое слово/фразу")
+        bot_msg = bot.send_message(message.chat.id, "Вас приветствует секрутный менеджер паролей!\nПридумайте контрольное слово/фразу. Старайтесь не придумывать лёгое слово/фразу")
         bot.register_next_step_handler(bot_msg, addPhrase, id)
     else:
         menu(message)
@@ -71,7 +71,7 @@ def text(message):
             bot.register_next_step_handler(bot_msg, editPasswords)
         elif message.text == "Посмотреть пароли":
             showPasswords(message)
-        elif message.text == "Удалить все пароли":
+        elif message.text == "Удалить все пароли 🔥":
             deletePasswords(message)
         elif message.text == "Изменить фразу":
             bot_msg = bot.send_message(message.chat.id, "Пришлите вашу новую фразу")
@@ -95,7 +95,7 @@ def managerMenu(message):
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     import_json = types.KeyboardButton("Изменение паролей")
     show_passwords = types.KeyboardButton("Посмотреть пароли")
-    delete_all = types.KeyboardButton("Удалить все пароли")
+    delete_all = types.KeyboardButton("Удалить все пароли 🔥")
     change_phrase = types.KeyboardButton("Изменить фразу")
     exit = types.KeyboardButton("Выход")
     markup.add(import_json, show_passwords, delete_all, change_phrase, exit)
@@ -115,6 +115,7 @@ def addPhrase(message, id):
     for message_id in range(message.id - 1, bot_msg.id + 1):
         bot.delete_message(id, message_id)
         logging.info(f"Deleted welcome() message #{message_id}")
+    menu(message)
 
 def editPasswords(message):
     logging.info("Triggered editPasswords()")
