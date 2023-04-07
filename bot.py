@@ -234,6 +234,10 @@ def deletePasswords(message):
     bot.send_message(message.chat.id, answer)
     menu(message)
 
+# TODO
+def burnAll():
+    pass
+
 #def coin_start():
 #    num = random.randint(0,1)
 
