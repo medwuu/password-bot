@@ -76,6 +76,8 @@ def text(message):
         elif message.text == "Изменить фразу":
             bot_msg = bot.send_message(message.chat.id, "Пришлите вашу новую фразу")
             bot.register_next_step_handler(bot_msg, changePhrase)
+        elif message.text == "Удалить следы присутствия":
+            burnAll(message)
         elif message.text == "Выход":
             menu(message)
     else:
@@ -97,8 +99,9 @@ def managerMenu(message):
     show_passwords = types.KeyboardButton("Посмотреть пароли")
     delete_all = types.KeyboardButton("Удалить все пароли 🔥")
     change_phrase = types.KeyboardButton("Изменить фразу")
+    burn = types.KeyboardButton("Удалить следы присутствия")
     exit = types.KeyboardButton("Выход")
-    markup.add(import_json, show_passwords, delete_all, change_phrase, exit)
+    markup.add(import_json, show_passwords, delete_all, change_phrase, burn, exit)
     bot.send_message(message.chat.id, "Меню менеджера паролей. Что вас интересует?", reply_markup=markup)
     
 
@@ -234,9 +237,11 @@ def deletePasswords(message):
     bot.send_message(message.chat.id, answer)
     menu(message)
 
-# TODO
-def burnAll():
-    pass
+def burnAll(message):
+    menu(message)
+    bot_msg = bot.send_message(message.chat.id, DB.burnAllDB(message.from_user.id))
+    time.sleep(2)
+    bot.delete_message(message.chat.id, bot_msg.id)
 
 #def coin_start():
 #    num = random.randint(0,1)

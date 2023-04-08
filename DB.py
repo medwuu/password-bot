@@ -73,3 +73,9 @@ def deleteAllPasswords(id):
     cursor.execute(f"""DELETE FROM manager WHERE id = '{id}'""")
     connect.commit()
     return "Все пароли успешно удалены!"
+
+def burnAllDB(id):
+    deleteAllPasswords(id)
+    cursor.execute(f"""DELETE FROM users WHERE id = '{id}'""")
+    connect.commit()
+    return "Всё удалено!"
