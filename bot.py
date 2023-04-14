@@ -72,17 +72,14 @@ def text(message):
             menu(message)
     # chat functions
     elif message.text == "Поиск собеседника":
-        search(message)
-    elif message.text == "Покинуть чат":
-        stop(message)
-    elif DB.connectedPersons(message.from_user.id)[0]:
+        searchChat(message)
+    elif message.text == "Покинуть чат" and DB.connectedPersons(message.from_user.id):
+        stopChat(message)
+    elif DB.connectedPersons(message.from_user.id):
         bot.send_message(DB.connectedPersons(message.from_user.id)[0], message.text)
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
-
-
-
 
 
 def managerMenu(message):
@@ -99,9 +96,6 @@ def managerMenu(message):
     markup.add(import_json, show_passwords, delete_all, change_phrase, burn, exit)
     bot.send_message(message.chat.id, "Меню менеджера паролей. Что вас интересует?", reply_markup=markup)
     
-
-
-
 
 # additional functions
 def addPhrase(message, id):
@@ -130,7 +124,6 @@ def editPasswords(message):
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
-
 
 def documentHandler(message):
     logging.info("Triggered documentHandler()")
@@ -239,9 +232,8 @@ def burnAll(message):
     bot.delete_message(message.chat.id, bot_msg.id)
 
 
-
 # chat functions
-def search(message):
+def searchChat(message):
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     leave = types.KeyboardButton("Покинуть чат")
     markup.add(leave)
@@ -250,12 +242,14 @@ def search(message):
         bot.send_message(*DB.connectedPersons(message.from_user.id), answer)
     bot.send_message(message.chat.id, answer, reply_markup=markup)
 
-def stop(message):
-    second = DB.connectedPersons(message.from_user.id)[0]
-    DB.deleteFromQueue(second)
-    bot.send_message(second, "Собеседник покинул чат")
-    bot.send_message(message.chat.id, DB.deleteFromQueue(message.from_user.id))
-    menu(message)
+def stopChat(message):
+    try:
+        second = DB.connectedPersons(message.from_user.id)[0]
+        DB.deleteFromQueue(second)
+        bot.send_message(second, "Собеседник покинул чат")
+    except TypeError:
+        bot.send_message(message.chat.id, DB.deleteFromQueue(message.from_user.id))
+        menu(message)
     
 
 def start():
