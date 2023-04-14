@@ -6,7 +6,6 @@ import csv
 import json
 import logging
 import os
-# import random
 import time
 
 from telebot import TeleBot, types
@@ -25,7 +24,7 @@ def welcome(message):
         menu(message)
 
 
-# TODO main menu
+
 @bot.message_handler(commands=['menu'])
 def menu(message):
     logging.info("Triggered menu()")
@@ -39,20 +38,11 @@ def menu(message):
             bot.delete_message(message.chat.id, message_to_delete)
             logging.info(f"Deleted message #{message_to_delete}")
         DB.deleteMessageID(message.from_user.id)
-    else:
-        bot.send_message(message.chat.id, "Что вас интересует?")
-        # markup_reply = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        # Flip = types.KeyboardButton('Подбросить монетку')
-        # num = types.KeyboardButton('Угадай число')
-        # pars = types.KeyboardButton('Курс валют')
-        # shifr = types.KeyboardButton('Шифр Цезаря')
-        # markup_reply.add(Flip)
-        # bot.send_message(message.chat.id, 'Выберите действие', reply_markup=markup_reply)
 
-
-
-
-    
+    markup = types.ReplyKeyboardMarkup(True, row_width=3)
+    search = types.KeyboardButton("Поиск собеседника")
+    markup.add(search)
+    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}🤙🏻! Добро пожаловать в анонимный чат👀! Нажми на поиск собеседника.', reply_markup= markup)
 
 
 @bot.message_handler(content_types=['text'])
@@ -60,7 +50,7 @@ def text(message):
     logging.info("Triggered text()")
     if message.text == DB.checkForPhrase(message.from_user.id)[0]:
         managerMenu(message)
-    if DB.checkInManager(message.from_user.id):
+    elif DB.checkInManager(message.from_user.id):
         if message.text == "Изменение паролей":
             markup = types.ReplyKeyboardMarkup(True, row_width=3)
             file_import = types.KeyboardButton("Импорт из файла")
@@ -80,13 +70,18 @@ def text(message):
             burnAll(message)
         elif message.text == "Выход":
             menu(message)
+    # chat functions
+    elif message.text == "Поиск собеседника":
+        search(message)
+    elif message.text == "Покинуть чат":
+        stop(message)
+    elif DB.connectedPersons(message.from_user.id)[0]:
+        bot.send_message(DB.connectedPersons(message.from_user.id)[0], message.text)
     else:
         bot.send_message(message.chat.id, "Извините, не понял вас :с")
         menu(message)
-    #if message.text == 'Подбросить монетку':
-    #    coin_start(message)
-    #if message.text == 'Угадай число':
-    #    random_num(message)
+
+
 
 
 
@@ -243,24 +238,24 @@ def burnAll(message):
     time.sleep(2)
     bot.delete_message(message.chat.id, bot_msg.id)
 
-#def coin_start():
-#    num = random.randint(0,1)
 
-#    if num > 0.5:
-#        print('Орёл')
-#    else:
-#        print('Решка')
 
-#def random_num():
+# chat functions
+def search(message):
+    markup = types.ReplyKeyboardMarkup(True, row_width=3)
+    leave = types.KeyboardButton("Покинуть чат")
+    markup.add(leave)
+    answer = DB.addToQueue(message.from_user.id)
+    if answer == "Собеседник найден!":
+        bot.send_message(*DB.connectedPersons(message.from_user.id), answer)
+    bot.send_message(message.chat.id, answer, reply_markup=markup)
 
-#    num = random.randint(0,20)
-#    print('Угадай число от 0 до 20')
-#    n = int(input())
-#    if n == num:
-#        print('Ты угадал')
-#   else:
-#        print('Увы :(')
-    
+def stop(message):
+    second = DB.connectedPersons(message.from_user.id)[0]
+    DB.deleteFromQueue(second)
+    bot.send_message(second, "Собеседник покинул чат")
+    bot.send_message(message.chat.id, DB.deleteFromQueue(message.from_user.id))
+    menu(message)
     
 
 def start():
@@ -272,7 +267,3 @@ def start():
         bot.polling()
     except Exception as error:
         logging.critical(f"Launch failed! Error:\n{error}", exc_info=True)
-
-    
-
-start()

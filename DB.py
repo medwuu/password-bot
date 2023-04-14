@@ -14,8 +14,13 @@ password TEXT
 cursor.execute("""CREATE TABLE IF NOT EXISTS users(
 id INTEGER UNIQUE,
 phrase TEXT,
-message_id INTEGER DEFAULT '',
-in_manager INTEGER DEFAULT 0
+message_id INT DEFAULT '',
+in_manager INT DEFAULT 0
+)""")
+
+cursor.execute("""CREATE TABLE IF NOT EXISTS chat(
+id INT UNIQUE,
+connected_with INT DEFAULT 0
 )""")
 
 def checkForPhrase(id):
@@ -79,3 +84,31 @@ def burnAllDB(id):
     cursor.execute(f"""DELETE FROM users WHERE id = '{id}'""")
     connect.commit()
     return "Всё удалено!"
+
+
+
+def addToQueue(id):
+    first = checkForAlone()
+    if first:
+        cursor.execute(f"""UPDATE chat SET connected_with = '{id}' WHERE id = '{first[0]}'""")
+        cursor.execute(f"""INSERT INTO chat(id, connected_with) VALUES(
+        '{id}',
+        '{first[0]}'
+        )""")
+        connect.commit()
+        return "Собеседник найден!"
+    else:
+        cursor.execute(f"""INSERT INTO chat(id) VALUES('{id}')""")
+        connect.commit()
+        return "Вы встали в очередь"
+
+def checkForAlone():
+    return cursor.execute(f"""SELECT id FROM chat WHERE connected_with = '0'""").fetchone()
+
+def connectedPersons(id):
+    return cursor.execute(f"""SELECT connected_with FROM chat WHERE id = '{id}'""").fetchone()
+
+def deleteFromQueue(id):
+    cursor.execute(f"""DELETE FROM chat WHERE id = '{id}'""")
+    connect.commit()
+    return "Вы покинули чат"
