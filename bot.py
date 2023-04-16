@@ -226,6 +226,7 @@ def deletePasswords(message):
     menu(message)
 
 def burnAll(message):
+    logging.info("Triggered burnAll()")
     menu(message)
     bot_msg = bot.send_message(message.chat.id, DB.burnAllDB(message.from_user.id))
     time.sleep(2)
@@ -234,6 +235,7 @@ def burnAll(message):
 
 # chat functions
 def searchChat(message):
+    logging.info("Triggered searchChat")
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     leave = types.KeyboardButton("Покинуть чат")
     markup.add(leave)
@@ -244,10 +246,12 @@ def searchChat(message):
 
 def stopChat(message):
     try:
+        logging.info("stopChat(): user 2 left chat")
         second = DB.connectedPersons(message.from_user.id)[0]
         DB.deleteFromQueue(second)
         bot.send_message(second, "Собеседник покинул чат")
     except TypeError:
+        logging.info("stopChat(): user 1 left chat")
         bot.send_message(message.chat.id, DB.deleteFromQueue(message.from_user.id))
         menu(message)
     
