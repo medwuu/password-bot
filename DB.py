@@ -81,6 +81,7 @@ def deleteAllPasswords(id):
 
 def burnAllDB(id):
     deleteAllPasswords(id)
+    deleteFromQueue(id)
     cursor.execute(f"""DELETE FROM users WHERE id = '{id}'""")
     connect.commit()
     return "Всё удалено!"

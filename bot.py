@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import config
 import DB
+import crypto
 
 import csv
 import json
@@ -48,7 +49,7 @@ def menu(message):
 @bot.message_handler(content_types=['text'])
 def text(message):
     logging.info("Triggered text()")
-    if message.text == DB.checkForPhrase(message.from_user.id)[0]:
+    if message.text == crypto.encryptMe(DB.checkForPhrase(message.from_user.id)[0]):
         managerMenu(message)
     elif DB.checkInManager(message.from_user.id):
         if message.text == "Изменение паролей":
@@ -100,7 +101,7 @@ def managerMenu(message):
 # additional functions
 def addPhrase(message, id):
     logging.info(f"Triggered addPhrase(). Args: phrase='{message.text}', id='{id}'")
-    answer = DB.addPhrase(id, message.text)
+    answer = DB.addPhrase(id, crypto.cryptMe(message.text))
     bot_msg = bot.send_message(id, answer)
     logging.info("Phrase added to DB")
     time.sleep(5)
@@ -149,6 +150,7 @@ def jsonProcess(message, file_src):
         passwords_list = json.load(file)["passwords"]
     logging.info("Triggered DB.addPassword()")
     for pass_element in passwords_list:
+        pass_element = [crypto.cryptMe(x) for x in pass_element]
         DB.addPassword(message.from_user.id, pass_element)
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
@@ -161,6 +163,7 @@ def csvProcess(message, file_src):
         reader = csv.reader(csv_file)
         for index, pass_element in enumerate(reader):
             if index != 0:
+                pass_element = [crypto.cryptMe(x) for x in pass_element]
                 DB.addPassword(message.from_user.id, pass_element[:3])
     bot.send_message(message.chat.id, "Пароли успешно добавлены!")
     os.remove(file_src)
@@ -183,7 +186,7 @@ def askForPassword(message, source, login):
     logging.info("Triggered askForPassword()")
     password = message.text
     logging.info("Triggered DB.addPassword()")
-    DB.addPassword(message.from_user.id, [source, login, password])
+    DB.addPassword(message.from_user.id, [crypto.cryptMe(source), crypto.cryptMe(login), crypto.cryptMe(password)])
     bot.send_message(message.chat.id, "Пароль успешно добавлен!")
     menu(message)
 
@@ -208,13 +211,14 @@ def showPasswords(message):
         menu(message)
     else:
         for password_num, password_line in enumerate(passwords_list, start=1):
+            password_line = [crypto.encryptMe(x) for x in password_line]
             bot.send_message(message.chat.id, f"{password_num}. Источник: <code>{password_line[0]}</code>\n" +
                              f"логин: <code>{password_line[1]}</code>\n" +
                              f"пароль: <code>{password_line[2]}</code>",
                              parse_mode="html")
 
 def changePhrase(message):
-    new_phrase = message.text
+    new_phrase = crypto.cryptMe(message.text)
     answer = DB.changeDBPhrase(message.from_user.id, new_phrase)
     bot.send_message(message.chat.id, answer)
     time.sleep(5)
@@ -239,11 +243,13 @@ def searchChat(message):
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     leave = types.KeyboardButton("Покинуть чат")
     markup.add(leave)
+    # FIXME сам с собой можешь встать в очередь
     answer = DB.addToQueue(message.from_user.id)
     if answer == "Собеседник найден!":
         bot.send_message(*DB.connectedPersons(message.from_user.id), answer)
     bot.send_message(message.chat.id, answer, reply_markup=markup)
 
+# FIXME chat not found. где-то в этой функции, хз где
 def stopChat(message):
     try:
         logging.info("stopChat(): user 2 left chat")
