@@ -4,6 +4,7 @@ import sqlite3
 connect = sqlite3.connect("database.db", check_same_thread=False)
 cursor = connect.cursor()
 
+# хранение логинов и паролей
 cursor.execute("""CREATE TABLE IF NOT EXISTS manager(
 id INT,
 source TEXT,
@@ -11,6 +12,7 @@ login TEXT,
 password TEXT
 )""")
 
+# данные о пользователе и его фраза
 cursor.execute("""CREATE TABLE IF NOT EXISTS users(
 id INTEGER UNIQUE,
 phrase TEXT,
@@ -18,11 +20,13 @@ message_id INT DEFAULT '',
 in_manager INT DEFAULT 0
 )""")
 
+# для анонимного чата
 cursor.execute("""CREATE TABLE IF NOT EXISTS chat(
 id INT UNIQUE,
 connected_with INT DEFAULT 0
 )""")
 
+# функции менеджера паролей
 def checkForPhrase(id):
     return cursor.execute(f"""SELECT phrase FROM users WHERE id = '{id}'""").fetchone()
 
@@ -87,14 +91,21 @@ def burnAllDB(id):
     return "Всё удалено!"
 
 
-
+# функции анонимного чата
 def addToQueue(id):
-    first = checkForAlone()
+    # для того, чтобы не было шизы в чате
+    try:
+        first = checkForAlone()[0]
+    except TypeError:
+        first = None
+
+    if first == id:
+        return "Вы уже в очереди"
     if first:
-        cursor.execute(f"""UPDATE chat SET connected_with = '{id}' WHERE id = '{first[0]}'""")
+        cursor.execute(f"""UPDATE chat SET connected_with = '{id}' WHERE id = '{first}'""")
         cursor.execute(f"""INSERT INTO chat(id, connected_with) VALUES(
         '{id}',
-        '{first[0]}'
+        '{first}'
         )""")
         connect.commit()
         return "Собеседник найден!"

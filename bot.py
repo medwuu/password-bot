@@ -98,7 +98,7 @@ def managerMenu(message):
     bot.send_message(message.chat.id, "Меню менеджера паролей. Что вас интересует?", reply_markup=markup)
     
 
-# additional functions
+# функции менеджера паролей
 def addPhrase(message, id):
     logging.info(f"Triggered addPhrase(). Args: phrase='{message.text}', id='{id}'")
     answer = DB.addPhrase(id, crypto.cryptMe(message.text))
@@ -237,26 +237,24 @@ def burnAll(message):
     bot.delete_message(message.chat.id, bot_msg.id)
 
 
-# chat functions
+# функции анонимного чата
 def searchChat(message):
     logging.info("Triggered searchChat")
     markup = types.ReplyKeyboardMarkup(True, row_width=3)
     leave = types.KeyboardButton("Покинуть чат")
     markup.add(leave)
-    # FIXME сам с собой можешь встать в очередь
     answer = DB.addToQueue(message.from_user.id)
     if answer == "Собеседник найден!":
         bot.send_message(*DB.connectedPersons(message.from_user.id), answer)
     bot.send_message(message.chat.id, answer, reply_markup=markup)
 
-# FIXME chat not found. где-то в этой функции, хз где
 def stopChat(message):
-    try:
+    second = DB.connectedPersons(message.from_user.id)[0]
+    if second:
         logging.info("stopChat(): user 2 left chat")
-        second = DB.connectedPersons(message.from_user.id)[0]
         DB.deleteFromQueue(second)
         bot.send_message(second, "Собеседник покинул чат")
-    except TypeError:
+    else:
         logging.info("stopChat(): user 1 left chat")
         bot.send_message(message.chat.id, DB.deleteFromQueue(message.from_user.id))
         menu(message)
