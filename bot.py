@@ -11,6 +11,7 @@ import time
 
 from telebot import TeleBot, types
 
+# создай файл config.py и создай переменную TOKEN, в которую запишешь токен бота
 bot = TeleBot(config.TOKEN)
 
 
